@@ -1,70 +1,31 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#0d4f9f">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Laboratorium IPA Terpadu</title>
-  <link rel="icon" href="https://lh3.googleusercontent.com/d/11LSUY7MX8y_SSsBJ8BikWgDwKDJqUnkM#.png">
+  <link rel="icon" href="https://lh3.googleusercontent.com/d/11LSUY7MX8y_SSsBJ8BikWgDwKDJqUnkM#.png" />
   <style>
-    html,
-    body {
-      box-sizing: border-box;
+    html, body {
       margin: 0;
       padding: 0;
       width: 100%;
+      height: 100%;
       background-color: #eee;
-      overflow-x: hidden;
-      overflow-y: hidden;
+      overflow: hidden; /* Mencegah scroll ganda */
     }
 
     .iframe-container {
       width: 100%;
-      height: 100vh;
-      height: 100dvh;
+      height: 100dvh; /* Menggunakan dvh agar pas di mobile browser */
       overflow: hidden;
     }
 
     iframe {
       display: block;
       width: 100%;
-      height: 100vh;
-      height: 100dvh;
-      border: 0;
-      overscroll-behavior-y: auto;
-    }
-
-    .refresh-app {
-      position: fixed;
-      right: 14px;
-      bottom: calc(84px + env(safe-area-inset-bottom, 0px));
-      z-index: 10000;
-      display: grid;
-      place-items: center;
-      width: 44px;
-      height: 44px;
-      padding: 0;
-      border: 1px solid rgba(255, 255, 255, .35);
-      border-radius: 50%;
-      background: #1261c7;
-      color: #fff;
-      box-shadow: 0 4px 14px rgba(5, 28, 68, .3);
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .refresh-app svg {
-      width: 21px;
-      height: 21px;
-    }
-
-    .refresh-app:focus-visible {
-      outline: 3px solid #8bc5ff;
-      outline-offset: 3px;
-    }
-
-    .refresh-app:active {
-      transform: scale(.95);
+      height: 100%;
+      border: none;
     }
   </style>
 </head>
@@ -73,31 +34,12 @@
     <iframe
       id="app"
       src="https://script.google.com/macros/s/AKfycbxV5lzDSQN_SULVE8yGaSSEJAD9JwH_3IyY3laFaqGq29dsRIRmrNReJjoJnNyQ2mgh/exec"
-      title="Laboratorium IPA Terpadu"
-      allowfullscreen
-      allow="fullscreen; camera; microphone; display-capture; geolocation">
+      scrolling="yes"
+      allowfullscreen="true"
+      webkitallowfullscreen="true"
+      mozallowfullscreen="true"
+      allow="fullscreen; camera; microphone; display-capture; geolocation;">
     </iframe>
   </div>
-  <button id="refreshApp" class="refresh-app" type="button" aria-label="Muat ulang aplikasi" title="Muat ulang aplikasi">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M20 7v5h-5"></path>
-      <path d="M4 17v-5h5"></path>
-      <path d="M5.6 9a7 7 0 0 1 11.55-2.6L20 12"></path>
-      <path d="M18.4 15a7 7 0 0 1-11.55 2.6L4 12"></path>
-    </svg>
-  </button>
-  <script>
-    (function () {
-      var frame = document.getElementById("app");
-      var refreshButton = document.getElementById("refreshApp");
-      var appUrl = "https://script.google.com/macros/s/AKfycbxV5lzDSQN_SULVE8yGaSSEJAD9JwH_3IyY3laFaqGq29dsRIRmrNReJjoJnNyQ2mgh/exec";
-
-      refreshButton.addEventListener("click", function () {
-        var reloadUrl = new URL(appUrl);
-        reloadUrl.searchParams.set("_github_reload", String(Date.now()));
-        frame.src = reloadUrl.toString();
-      });
-    })();
-  </script>
 </body>
 </html>
