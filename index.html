@@ -1,59 +1,171 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#eee">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
   <title>Laboratorium IPA Terpadu</title>
-  <link rel="icon" href="https://lh3.googleusercontent.com/d/11LSUY7MX8y_SSsBJ8BikWgDwKDJqUnkM#.png">
+  <link rel="icon" href="https://lh3.googleusercontent.com/d/11LSUY7MX8y_SSsBJ8BikWgDwKDJqUnkM#.png" />
   <style>
-    html,
-    body {
-      box-sizing: border-box;
+    html, body {
       margin: 0;
       padding: 0;
       width: 100%;
-      min-height: 100%;
+      height: 100%;
       background-color: #eee;
-      overflow-x: hidden;
-      overflow-y: auto;
-      overscroll-behavior-y: auto;
-    }
-
-    body {
-      min-height: 100vh;
-      min-height: 100dvh;
-      /* Ruang tipis memberi browser area overscroll di tepi halaman. */
-      padding-bottom: 2px;
+      overflow: hidden;
+      overscroll-behavior: none;
     }
 
     .iframe-container {
+      position: relative;
       width: 100%;
-      height: 100vh;
       height: 100dvh;
-      overflow: visible;
+      overflow: hidden;
     }
 
     iframe {
       display: block;
       width: 100%;
-      height: 100vh;
-      height: 100dvh;
-      border: 0;
-      overscroll-behavior-y: auto;
-      touch-action: pan-y;
+      height: 100%;
+      border: none;
+      transition: transform .2s ease;
     }
+
+    /* Area tarik di atas layar */
+    #pullZone {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 28px;            /* ubah sesuai kebutuhan */
+      z-index: 10;
+      touch-action: none;      /* gestur ditangani JS */
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    #pullZone::after {         /* garis kecil penanda */
+      content: "";
+      width: 40px; height: 4px;
+      margin-top: 6px;
+      border-radius: 2px;
+      background: rgba(0,0,0,.25);
+    }
+
+    /* Indikator refresh */
+    #indicator {
+      position: absolute;
+      top: 0; left: 50%;
+      width: 36px; height: 36px;
+      margin-left: -18px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,.3);
+      display: flex; align-items: center; justify-content: center;
+      transform: translateY(-50px);
+      transition: transform .2s ease;
+      z-index: 20;
+      pointer-events: none;
+    }
+    #indicator svg { width: 20px; height: 20px; fill: #1a73e8; }
+    #indicator.loading svg { animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Tombol refresh cadangan */
+    #refreshBtn {
+      position: absolute;
+      right: 12px; bottom: 12px;
+      width: 44px; height: 44px;
+      border: none; border-radius: 50%;
+      background: rgba(26,115,232,.9);
+      box-shadow: 0 2px 8px rgba(0,0,0,.3);
+      z-index: 30;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #refreshBtn svg { width: 22px; height: 22px; fill: #fff; }
   </style>
 </head>
 <body>
   <div class="iframe-container">
+    <div id="pullZone"></div>
+
+    <div id="indicator">
+      <svg viewBox="0 0 24 24"><path d="M17.65 6.35A7.96 7.96 0 0 0 12 4a8 8 0 1 0 7.73 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+    </div>
+
+    <button id="refreshBtn" aria-label="Muat ulang">
+      <svg viewBox="0 0 24 24"><path d="M17.65 6.35A7.96 7.96 0 0 0 12 4a8 8 0 1 0 7.73 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+    </button>
+
     <iframe
       id="app"
-      src="https://script.google.com/macros/s/AKfycbxV5lzDSQN_SULVE8yGaSSEJAD9JwH_3IyY3laFaqGq29dsRIRmrNReJjoJnNyQ2mgh/exec"
       title="Laboratorium IPA Terpadu"
+      src="https://script.google.com/macros/s/AKfycbxV5lzDSQN_SULVE8yGaSSEJAD9JwH_3IyY3laFaqGq29dsRIRmrNReJjoJnNyQ2mgh/exec"
+      scrolling="yes"
       allowfullscreen
-      allow="fullscreen; camera; microphone; display-capture; geolocation">
+      allow="fullscreen; camera; microphone; display-capture; geolocation;">
     </iframe>
   </div>
+
+  <script>
+    (function () {
+      const frame = document.getElementById('app');
+      const zone = document.getElementById('pullZone');
+      const indicator = document.getElementById('indicator');
+      const btn = document.getElementById('refreshBtn');
+      const baseSrc = frame.src;
+      const THRESHOLD = 70;   // jarak tarik (px) untuk memicu refresh
+      let startY = 0, pulling = false, loading = false;
+
+      function reload() {
+        if (loading) return;
+        loading = true;
+        indicator.classList.add('loading');
+        indicator.style.transform = 'translateY(16px)';
+        frame.style.transform = 'translateY(0)';
+        frame.src = baseSrc;               // muat ulang iframe
+      }
+
+      frame.addEventListener('load', function () {
+        if (!loading) return;
+        loading = false;
+        indicator.classList.remove('loading');
+        indicator.style.transform = 'translateY(-50px)';
+      });
+
+      zone.addEventListener('touchstart', function (e) {
+        if (loading) return;
+        startY = e.touches[0].clientY;
+        pulling = true;
+        frame.style.transition = 'none';
+        indicator.style.transition = 'none';
+      }, { passive: true });
+
+      zone.addEventListener('touchmove', function (e) {
+        if (!pulling) return;
+        const dist = Math.max(0, e.touches[0].clientY - startY);
+        const d = Math.min(dist * 0.5, 90);
+        frame.style.transform = 'translateY(' + d + 'px)';
+        indicator.style.transform = 'translateY(' + (d - 40) + 'px) rotate(' + (dist * 3) + 'deg)';
+      }, { passive: true });
+
+      function end(e) {
+        if (!pulling) return;
+        pulling = false;
+        frame.style.transition = 'transform .2s ease';
+        indicator.style.transition = 'transform .2s ease';
+        const y = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0].clientY : startY;
+        if (y - startY >= THRESHOLD) {
+          reload();
+        } else {
+          frame.style.transform = 'translateY(0)';
+          indicator.style.transform = 'translateY(-50px)';
+        }
+      }
+      zone.addEventListener('touchend', end);
+      zone.addEventListener('touchcancel', end);
+
+      btn.addEventListener('click', reload);
+    })();
+  </script>
 </body>
 </html>
